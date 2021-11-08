@@ -1,7 +1,12 @@
+--Original
+--https://github.com/willdoescode/TicTacHs
+
 module Main where
 
-import Data.Foldable
+import Data.Foldable 
+-- import Data.Foldable.null
 import Data.Sequence hiding (replicate)
+-- import Data.Set
 import System.Exit (exitSuccess)
 
 type Board = [Row]
@@ -33,6 +38,7 @@ instance Show Move where
   show Nine = "9"
 
 
+
 -- showRow :: Row -> String
 showRow row =
   show (head row)
@@ -46,9 +52,9 @@ showRow row =
 
 showBoard = foldl (\s row -> s ++ showRow row) ""
 
--- myNewBoardV3 = [[One, Two, Three], [Four, Five, Six], [Seven, Eight, Nine]]
-
 myNewBoardV3 = [[Zero, One, Two], [Three, Four, Five], [Six, Seven, Eight]]
+
+myNewBoardV4 = [[One, Two, Three], [Four, Five, Six], [Seven, Eight, Nine]]
  
 checkRow :: Row -> Bool
 checkRow row
@@ -98,6 +104,10 @@ getCell n = (x, y)
     x = quot n 3
     y = n - (x * 3)
 
+-- isacceptableAnswer? answer = 
+  -- what toDo
+  -- 1. cell = getCell ()
+
 runGameV3 :: Play -> IO ()
 runGameV3 Play {current = curr, board = b} = do
   putStrLn "\n"
@@ -125,3 +135,18 @@ runGameV3 Play {current = curr, board = b} = do
 
 main :: IO ()
 main = runGameV3 Play {current = X, board = myNewBoardV3}
+
+-- reverseWords :: String -> String  
+-- reverseWords = unwords . map reverse . words
+
+-- getValidInput = do   
+--     line <- getLine  
+--     if null line  
+--         then return ()  
+--         else do  
+--             putStrLn $ line  
+--             getValidInput  
+
+
+-- reverseWords :: String -> String  
+-- reverseWords = unwords . map reverse . words              
