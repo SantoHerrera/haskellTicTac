@@ -5,9 +5,12 @@ module Main where
 
 import Data.Foldable 
 -- import Data.Foldable.null
-import Data.Sequence hiding (replicate)
+import Text.Read
+import Data.Sequence hiding (replicate, null)
 -- import Data.Set
 import System.Exit (exitSuccess)
+
+-- Module `Text.Read' does not export `readMaybe'
 
 type Board = [Row]
 
@@ -116,7 +119,9 @@ runGameV3 Play {current = curr, board = b} = do
   putStrLn $ "Current Player: " ++ show curr
   putStrLn "Enter cell to change> "
   cellNumber <- getLine
+  -- cellNumber <- getLineInt
   let cell = getCell (read cellNumber :: Int)
+  -- let cell = (testing)
   let newBoard = changeElem cell curr b
 
 
@@ -136,17 +141,53 @@ runGameV3 Play {current = curr, board = b} = do
 main :: IO ()
 main = runGameV3 Play {current = X, board = myNewBoardV3}
 
--- reverseWords :: String -> String  
--- reverseWords = unwords . map reverse . words
+getLineInt :: IO Int
+getLineInt = do
+      putStrLn "Please enter Cell"
+      line <- getLine
+      case readMaybe line of
+            Just x -> do
+               return x
+            Nothing -> do
+               putStrLn "Invalid number entered"
+               x <- getLineInt
+               return x
 
--- getValidInput = do   
---     line <- getLine  
---     if null line  
---         then return ()  
---         else do  
---             putStrLn $ line  
---             getValidInput  
 
+testing = do
+  idk <- getLineInt            
+  return (getCell idk)
+
+-- wtfTest = do
+--   fuck <- getLine
+--   return readMaybe fuck
 
 -- reverseWords :: String -> String  
 -- reverseWords = unwords . map reverse . words              
+
+
+
+getValidInput = do   
+    line <- getLine  
+    if null line  
+        then return ()  
+        else do  
+            putStrLn $ line  
+            getValidInput  
+
+
+
+
+
+-- getLineInt :: IO Int
+-- getLineInt = do
+--       putStrLn "Please enter your guess"
+--       line <- getLine
+--       case readMaybe line of
+--             Just x -> do
+--                return (getCell (readMaybe x :: Maybe Int))
+--             Nothing -> do
+--                putStrLn "Invalid number entered"
+--                x <- getLineInt
+--                return x
+
