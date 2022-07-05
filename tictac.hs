@@ -1,6 +1,6 @@
 --Original
 --https://github.com/willdoescode/TicTacHs
-module Main where
+-- module Main where
 import Data.Foldable 
 import Text.Read
 import Data.Sequence hiding (replicate, null)
@@ -20,7 +20,6 @@ data Play = Play
   deriving (Show)
 
 instance Show Move where
-  show Blank = " "
   show X = "X"
   show O = "O"
   show Zero = "0"
@@ -34,29 +33,32 @@ instance Show Move where
   show Eight = "8"
   show Nine = "9"
 
--- showRow :: Row -> String
-showRow row =
-  show (head row)
-    ++ " | "
-    ++ show (row !! 1)
-    ++ " | "
-    ++ show (row !! 2)
-    ++ "\n"
-    ++ "-   -   -"
-    ++ "\n"
+newBoard = [[Zero, One, Two], [Three, Four, Five], [Six, Seven, Eight]]
 
-showBoard = foldl (\s row -> s ++ showRow row) ""
+alternatePlayer :: Move -> Move
+alternatePlayer X = O
+alternatePlayer O = X
+alternatePlayer Blank = X
 
-myNewBoard = [[Zero, One, Two], [Three, Four, Five], [Six, Seven, Eight]]
+nub :: (Eq a) => [a] -> [a]
+nub [] = []
+nub (x:xs) = x : nub (Prelude.filter (\y -> x /= y) xs)
+
+flatten :: [[a]] -> [a]
+flatten arr = [y | x <- arr, y <- x]            
+
+isTied :: Eq a => [[a]] -> Bool
+isTied b =
+   Data.Foldable.length (nub $ flatten b) <= 2
 
 checkRow :: Row -> Bool
 checkRow row
   | all (== X) row = True
   | all (== O) row = True
-  | otherwise = False
+  | otherwise = False   
 
-checkWin :: Board -> Bool
-checkWin [[a, b, c], [d, e, f], [g, h, i]] =
+hasWinner :: Board -> Bool
+hasWinner [[a, b, c], [d, e, f], [g, h, i]] =
   or
     [ checkRow [a, b, c],
       checkRow [d, e, f],
@@ -68,61 +70,18 @@ checkWin [[a, b, c], [d, e, f], [g, h, i]] =
       checkRow [a, e, i]
     ]
 
-flatten :: [[a]] -> [a]
-flatten arr = [y | x <- arr, y <- x]
-
--- checkTie :: Board -> Bool
-checkTie = all (== False) . flatten . (map . map) (== Blank)
-
-checkTieV2 :: Eq a => [a] -> [a] -> Bool
-checkTieV2 x y = any id $ (==) <$> x <*> y
-
+--why cant i just do this? something about seq? confused :(
+-- replace index el lst = update index el lst 
 replace :: Int -> a -> [a] -> [a]
-replace index el lst = toList $ update index el $ fromList lst
+replace index el lst = toList $ update index el $ fromList lst  
 
--- changeElem :: (Int, Int) -> Move -> Board -> Board
+changeElem :: (Int, Int) -> Move -> [[Move]] -> [[Move]]
 changeElem (x, y) move board =
   let row = board !! x
       newRow = replace y move row
-   in replace x newRow board
-
--- changeElemV2 (x, y) move board =  
---   let row = board !! x
---       if (row !! y) == X
---         then board
---         else do          
---           newRow = replace y move row
---           in replace x newRow board
-
-isSymbol s = 
-  if s == X || s == O   
-    then True
-    else False
-
-
--- main = do   
---    let var = 23 
---    if var `rem` 2 == 0 
---       then putStrLn "Number is Even" 
---    else putStrLn "Number is Odd"
-
--- if (row !! y) == X || O
---   then board
---   else newRow = replace y move row
---    in replace x newRow board  
-
--- changeElemV2 (x, y) move board =
---   let row = board !! x
---       cell = row !! y
---   if cell == X 
---     then board
---   else newRow = replace y move row
---    in replace x newRow board   
-
-alternatePlayer :: Move -> Move
-alternatePlayer X = O
-alternatePlayer O = X
-alternatePlayer Blank = X
+   in if row !! y == X || row !! y == O
+      then board 
+      else replace x newRow board
 
 getCell :: Int -> (Int, Int)
 getCell n = (x, y)
@@ -130,11 +89,9 @@ getCell n = (x, y)
     x = quot n 3
     y = n - (x * 3)
     
-
-
 getLineInt :: IO Int
 getLineInt = do
-      putStrLn "Please enter cell to change"
+      putStrLn "enter cell to change"
       line <- getLine
       case readMaybe line of
             Just x -> do
@@ -144,39 +101,40 @@ getLineInt = do
                x <- getLineInt
                return x
 
+showRow :: Row -> String
+showRow row =
+  show (head row)
+    ++ " | "
+    ++ show (row !! 1)
+    ++ " | "
+    ++ show (row !! 2)
+    ++ "\n"
+    ++ "-   -   -"
+    ++ "\n"              
 
+--why does it give both of these? depening if i comment out type signature and :t showBoard
+-- showBoard :: [Row] -> [Char]
+-- showBoard :: Foldable t => t Row -> [Char]
+showBoard board = foldl (\s row -> s ++ showRow row) "" board              
 
-
-runGameV3 :: Play -> IO ()
-runGameV3 Play {current = curr, board = b} = do
+runGame :: Play -> IO ()
+runGame Play {current = curr, board = b} = do
   putStrLn "\n"
   putStr $ showBoard b
-
   putStrLn $ "Current Player: " ++ show curr
 
   cellNumber <- getLineInt
   let cell = getCell cellNumber 
   let newBoard = changeElem cell curr b
 
-  if checkWin newBoard
-    then do
-      putStrLn $
-        show curr
-          ++ " Has won!"
-      exitSuccess
-    else
-      if not $ checkTieV2 (flatten myNewBoard) $ flatten myNewBoard
-        then do
-          putStrLn "There was a tie :("
-          exitSuccess
-        else runGameV3 Play {current = alternatePlayer curr, board = newBoard}  
+  let action | cellNumber > 8 = runGame Play {current = curr, board = b } -- this feels wrong, becuase let newBoard returns an error. 
+             | newBoard == b = runGame Play {current = curr, board = b } --if they choose a cell thats already taken 
+             | hasWinner newBoard = do putStrLn $ show curr ++ " Has won!"
+             | isTied newBoard = putStrLn "Their was a tie, run main to play again"
+             | otherwise = runGame Play {current = alternatePlayer curr, board = newBoard}  
+  action
 
 main :: IO ()
-main = runGameV3 Play {current = X, board = myNewBoard}
+main = runGame Play {current = X, board = newBoard}
 
-
---plan 
---if its either X or O return board
--- else return newBoard  
-
-
+-- "Yes"
